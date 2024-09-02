@@ -93,10 +93,10 @@
 				// Add GeoJSON layer with custom styles and filtering
 				L.geoJSON(data, {
 					// Filter countries to include only those with infections
-					filter: feature => {
-						const infectionCount = infectionData[feature.properties.NAME] || 0;
-						return infectionCount > 0; // Only include countries with infections
-					},
+					//filter: feature => {
+						//const infectionCount = infectionData[feature.properties.NAME] || 0;
+						//return infectionCount > 0; // Only include countries with infections
+					//},
 					style: feature => ({
 						color: 'none', // No border
 						weight: 1, // No border weight
