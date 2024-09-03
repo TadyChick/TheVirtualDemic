@@ -83,7 +83,7 @@
 					if (country && count) {
 						infectionData[country.trim()] = parseInt(count.trim());
 					}
-					document.getElementById('text').textContent = country + " " + count;
+					document.getElementById('search-bar').textContent = country + " " + count;
 				});
 			})
 		.catch(error => console.error('Error loading infection data:', error));
