@@ -51,6 +51,7 @@
 	<!-- Suggestions dropdown -->
 	<div id="suggestions"></div>
 
+	<div id="infection-data"></div>
 	<div id="map"></div>
 	<script>
 		var infectionIcon = L.icon({
@@ -82,6 +83,7 @@
 					if (country && count) {
 						infectionData[country.trim()] = parseInt(count.trim());
 					}
+					document.getElementById('infection-data').textContent = country + " " + count;
 				});
 			})
 		.catch(error => console.error('Error loading infection data:', error));
