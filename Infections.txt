@@ -110,7 +110,7 @@ Kiribati,0
 Kuwait,0
 Kyrgyzstan,0
 Laos,0
-Latvia,0
+Latvia,3
 Lebanon,0
 Lesotho,0
 Liberia,0
