@@ -1,0 +1,40 @@
+{
+    "type": "FeatureCollection",
+    "name": "Public_School_Characteristics_2020-21",
+    "crs": {
+    "type": "name",
+    "properties": {
+    "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+    },
+    "features": [
+    {
+    "type": "Feature",
+    "properties": {
+    "students": 908,
+    "name": "Albertville Middle School"
+    },
+    "geometry": {
+    "type": "Point",
+    "coordinates": [
+    -86.2062,
+    34.2602
+    ]
+    }
+    },
+    {
+    "type": "Feature",
+    "properties": {
+    "students": 1606,
+    "name": "Albertville High School"
+    },
+    "geometry": {
+    "type": "Point",
+    "coordinates": [
+    -86.2049,
+    34.2622
+    ]
+    }
+    }
+    ]
+}
