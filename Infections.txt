@@ -116,7 +116,7 @@ Lesotho,0
 Liberia,0
 Libya,0
 Liechtenstein,0
-Lithuania,0
+Lithuania,1
 Luxembourg,0
 Macao,0
 Madagascar,0
