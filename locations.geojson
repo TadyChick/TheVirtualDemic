@@ -1,4 +1,4 @@
-
+{
     "type": "FeatureCollection",
     "name": "Public_School_Characteristics_2020-21",
     "crs": {
@@ -37,3 +37,4 @@
     }
     }
     ]
+}
