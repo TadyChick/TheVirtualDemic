@@ -1,6 +1,6 @@
 {
     "type": "FeatureCollection",
-    "name": "Public_School_Characteristics_2020-21",
+    "name": "Infection locations",
     "crs": {
     "type": "name",
     "properties": {
@@ -11,7 +11,7 @@
     {
     "type": "Feature",
     "properties": {
-    "students": 908,
+    "infections": 1,
     "name": "Albertville Middle School"
     },
     "geometry": {
@@ -25,7 +25,7 @@
     {
     "type": "Feature",
     "properties": {
-    "students": 1606,
+    "infections": 1,
     "name": "Albertville High School"
     },
     "geometry": {
