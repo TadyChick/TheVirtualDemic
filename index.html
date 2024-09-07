@@ -1,262 +1,157 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-	<script src="https://unpkg.com/leaflet-pip@1.1.0/leaflet-pip.min.js"></script>
-	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
-	<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
-	<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-	
-	<style>
-		#map {position: absolute; top: 40px; bottom: 0; left: 0; right: 0;}
-		#search-bar {
-			position: absolute;
-			top: 10px;
-			left: 50%;
-			transform: translateX(-50%);
-			z-index: 1000;
-			width: 300px;
-			padding: 8px;
-			font-size: 16px;
-			border-radius: 4px;
-			border: 1px solid #ccc;
-		}
-		#suggestions {
-			position: absolute;
-			top: 50px;
-			left: 50%;
-			transform: translateX(-50%);
-			z-index: 1000;
-			width: 300px;
-			background-color: white;
-			border: 1px solid #ccc;
-			border-radius: 4px;
-			max-height: 150px;
-			overflow-y: auto;
-		}
-		.suggestion-item {
-			padding: 8px;
-			cursor: pointer;
-		}
-		.suggestion-item:hover {
-			background-color: #f0f0f0;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Tutorial</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <style>
+        #map{
+          float: left;
+          margin-left: 4px;
+            height: 98vh;
+            width: 80%;
+        }
+
+                /* Define the SVG filter for blurring */
+                .blurred-polygon {
+            filter: url(#blur-filter);
+        }
+    </style>
 </head>
 <body>
-	<!-- Search bar input -->
-	<input type="text" id="search-bar" placeholder="Search TikTok username here...">
-	<!-- Suggestions dropdown -->
-	<div id="suggestions"></div>
+  
+    <div id="map"></div>
 
-	<div id="infection-data"></div>
-	<div id="map"></div>
-	<script>
-		var infectionIcon = L.icon({
-			iconUrl: 'InfectionMarker.png',
-
-			iconSize:     [10, 10], // size of the icon
-			iconAnchor:   [5, 5], // point of the icon which will correspond to marker's location
-			popupAnchor:  [0, -5] // point from which the popup should open relative to the iconAnchor
-		});
-
-		var map = L.map('map', {
-			worldCopyJump: false,
-			maxBounds: [[-85, -180], [85, 180]],
-			maxBoundsViscosity: 1.0,
-			minZoom: 2,
-			zoomSnap: 0.25,
-		}).setView([20, 0], 2);
-
-
-		let infectionData = {};
-
-		// Load the infection data from the .txt file
-		fetch('Infections.txt') // Replace with the actual path to your .txt file
-			.then(response => response.text())
-			.then(text => {
-				// Parse the text data and create a map of country names to infection counts
-				text.split('\n').forEach(line => {
-					let [country, count] = line.split(',');
-					if (country && count) {
-						infectionData[country.trim()] = parseInt(count.trim());
-					}
-					document.getElementById('search-bar').textContent = country + " " + count;
-				});
-			})
-		.catch(error => console.error('Error loading infection data:', error));
-		
-			// Fetch and load GeoJSON data
-		fetch('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master/10m/physical/ne_10m_land.json') // Replace with your detailed GeoJSON file path
-			.then(response => response.json())
-			.then(data => {
-				// Add GeoJSON layer with custom styles and filtering
-				L.geoJSON(data, {
-					// Filter countries to include only those with infections
-					//filter: feature => {
-						//const infectionCount = infectionData[feature.properties.NAME] || 0;
-						//return infectionCount > 0; // Only include countries with infections
-					//},
-					style: feature => ({
-						color: 'none', // No border
-						weight: 1, // No border weight
-						fillColor: getCountryColor(feature.properties.NAME), // Fill color based on infection count
-						fillOpacity: 0.5 // Opacity of the fill color for better visibility
-					}),
-					onEachFeature: (feature, layer) => {
-						// Fetch the infection count for the country
-						const infectionCount = infectionData[feature.properties.NAME] || 0;
-						// Bind the popup showing the country name and infection count
-						layer.bindPopup(`<b>${feature.properties.NAME}</b><br>Infections: ${infectionCount}`);
-					}
-				}).addTo(map);
-			});
-
-		// Function to assign colors based on the infection count
-		function getCountryColor(countryName) {
-			// Retrieve the infection count for the country, defaulting to 0 if not found
-			const infectionCount = infectionData[countryName] || 0;
-
-			// Check the infection count and return the corresponding color
-			if (infectionCount > 0) {
-				return '#ff0000'; // Red for countries with infection count exceeding 2
-			} else {
-				return '#ffffff'; // Default gray color for countries with 2 or fewer infections
-			}
-		}
-
-		L.tileLayer('https://api.maptiler.com/maps/dataviz/{z}/{x}/{y}.png?key=nptVjonf9zCS6baje3FJ', {
-			attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-			noWrap: true
-		}).addTo(map);
-
-		// Store objects in an array
-		var markers = [];
-		var countries = [];
-		var infections = 0;
-
-		const markersClusters = L.markerClusterGroup({
-    iconCreateFunction: function (cluster) {
-        const childCount = cluster.getChildCount(); // Number of markers in the cluster
-
-		// Check if the cluster has 500 or more children to use a different icon
-		if (childCount >= 5000000) {
-            // Use a different icon when the cluster has 500 or more children
-            return L.icon({
-                iconUrl: 'InfectionMarker3.png', // Replace with the URL of your different icon
-                iconSize: [25, 25], // Set the size of the large cluster icon
-                iconAnchor: [12.5, 12.5], // Center the anchor point
-            });
-        }
-        // Check if the cluster has 500 or more children to use a different icon
-        if (childCount >= 500000) {
-            // Use a different icon when the cluster has 500 or more children
-            return L.icon({
-                iconUrl: 'InfectionMarker2.png', // Replace with the URL of your different icon
-                iconSize: [20, 20], // Set the size of the large cluster icon
-                iconAnchor: [10, 10], // Center the anchor point
-            });
-        } else {
-            const clusterSize = Math.min(40, 10 + childCount * 1.2); // Min 20px, scale up slightly
-            return L.icon({
-                iconUrl: 'InfectionMarker.png', // The original icon
-                iconSize: [clusterSize, clusterSize], // Adjust size based on the cluster count
-                iconAnchor: [clusterSize / 2, clusterSize / 2], // Center anchor
-                popupAnchor: [0, -clusterSize / 4] // Adjust popup
-            });
-        }
-    }
-});
-
-		function createMarker(lat, lng, name) {
-			if (name) {
-				var marker = L.marker([lat, lng], {icon:infectionIcon}).bindPopup(name); // Bind the popup with the name
-
-				markersClusters.addLayer(marker);
-				markers.push({ marker: marker, name: name.toLowerCase(), lat: lat, lng: lng });
-			} else {
-				var marker = L.marker([lat, lng], {icon:infectionIcon});
-				markersClusters.addLayer(marker);
-			}
-		}
-
-
-
-		function generatemarkerViaFile()
-		{
-
-			createMarker
-		}
-
-		// Create multiple markers with some having empty names
-		createMarker(54.617, 23.681,'marker Name 1');
-		createMarker(54.6, 23.6,'marker Name 2');
-		createMarker(54.5, 23.5,'marker Name 3');
-		createMarker(-25.2744, 133.7751, ''); // No name provided, not added to the search list
-		createMarker(40.7128, -74.0060, 'marker Name 3');
-
-
-
-		map.addLayer(markersClusters);
-
-		// Function to search for a marker by name and zoom to its location
-		function searchmarkerByName(name) {
-			if (!name) return;
-
-			var foundmarker = markers.find(function(item) {
-				return item.name === name.toLowerCase();
-			});
-
-			if (foundmarker) {
-				map.setView([foundmarker.lat, foundmarker.lng], 15);
-				foundmarker.marker.openPopup();
-			}
-		}
-
-		// Function to filter and show suggestions
-		function filterSuggestions(query) {
-			const suggestionsContainer = document.getElementById('suggestions');
-			suggestionsContainer.innerHTML = ''; // Clear previous suggestions
-
-			if (!query) return;
-
-			const filteredmarkers = markers.filter(function(item) {
-				return item.name.includes(query.toLowerCase());
-			});
-
-			// Display suggestions
-			filteredmarkers.forEach(function(item) {
-				const suggestionItem = document.createElement('div');
-				suggestionItem.classList.add('suggestion-item');
-				suggestionItem.textContent = item.name;
-
-				// Handle click event on a suggestion
-				suggestionItem.addEventListener('click', function() {
-					document.getElementById('search-bar').value = item.name;
-					searchmarkerByName(item.name);
-					suggestionsContainer.innerHTML = ''; // Hide suggestions after selection
-				});
-
-				suggestionsContainer.appendChild(suggestionItem);
-			});
-		}
-
-		// Add event listener to the search bar
-		document.getElementById('search-bar').addEventListener('input', function(event) {
-			const searchQuery = event.target.value.trim();
-			filterSuggestions(searchQuery);
-		});
-
-		// Add event listener to handle Enter key for direct search
-		document.getElementById('search-bar').addEventListener('keypress', function(event) {
-			if (event.key === 'Enter') {
-				const searchQuery = event.target.value.trim();
-				searchmarkerByName(searchQuery);
-				document.getElementById('suggestions').innerHTML = ''; // Hide suggestions after pressing Enter
-			}
-		});
-	</script>
+    <!-- Define the SVG filter for blurring -->
+    <svg width="0" height="0">
+        <defs>
+            <filter id="blur-filter" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="10" />
+            </filter>
+        </defs>
+    </svg>
+    </style>
 </body>
 </html>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="dist/glify-browser.js"></script>
+<script>
+    
+  var infectionIcon = L.icon({
+    iconUrl: 'https://github.com/TadyChick/TheVirtualDemic/blob/main/InfectionMarker.png',
+    iconSize: [10, 10], // size of the icosn
+    iconAnchor: [5, 5], // point of the icon which will correspond to marker's location
+    popupAnchor: [0, -5] // point from which the popup should open relative to the iconAnchor
+  });
+
+  var map = L.map('map', {
+			worldCopyJump: false,
+			maxBounds: [[-60, -180], [81, 180]],
+			maxBoundsViscosity: 1.0,
+			minZoom: 2.6,
+			zoomSnap: 0.25,
+		}).setView([25, 10], 2.6);
+
+  // Create a new pane for the blurred polygons
+  map.createPane('blurredPane');
+  map.getPane('blurredPane').style.zIndex = 400;
+
+  let infectionData = {};
+
+  fetch('https://raw.githubusercontent.com/TadyChick/TheVirtualDemic/main/Infections.txt')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.text();
+    })
+    .then(text => {
+      // Parse the text data and create a map of country names to infection counts
+      text.split('\n').forEach(line => {
+        let [country, count] = line.split(',');
+        if (country && count) {
+          infectionData[country.trim()] = parseInt(count.trim(), 10) || 0; // Convert to number or default to 0
+        }
+      });
+      loadGeoJsonLayer();
+    })
+    .catch(error => console.error('Error loading infection data:', error));
+
+  function loadGeoJsonLayer() {
+    fetch('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master/10m/cultural/ne_10m_admin_0_countries.json')
+      .then(response => response.json())
+      .then(data => {
+        L.geoJSON(data, {
+          pane: 'blurredPane', // Use the custom pane
+          style: feature => {
+            // Get the country's infection count from the parsed data
+            const infectionCount = infectionData[feature.properties.NAME] || 0;
+            let fillColor = '#bd0b0b';
+            let fillOpacity;
+
+            if (infectionCount >= 3) {
+              fillOpacity = 0.2;
+            } else if (infectionCount > 0) {
+              fillOpacity = 0.05;
+            } else {
+              fillColor = 'transparent'; // Transparent for 0 infections or not meeting criteria
+              fillOpacity = 0;
+            }
+
+            return {
+              className: 'blurred-polygon',
+              color: 'none', // No border
+              weight: 1, // Border weight
+              fillColor: fillColor,
+              fillOpacity: fillOpacity // Opacity only if infections exist
+            };
+          },
+          onEachFeature: (feature, layer) => {
+            const infectionCount = infectionData[feature.properties.NAME] || 0;
+            if (infectionCount > 0) {
+              layer.bindPopup(`<b>${feature.properties.NAME}</b><br><h>Infections: ${infectionCount}</h>`);
+            }
+          }
+        }).addTo(map);
+      })
+      .catch(error => console.error('Error loading GeoJSON:', error));
+  }
+
+  var mapp = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+    maxZoom: 16,
+    noWrap: true, // Prevent the map from repeating horizontally
+    zoomAnimation: true, // Enables smooth zoom animation
+    zoomAnimationThreshold: 5, // Sets a threshold for smooth zooming
+    easeLinearity: 0.25 // Controls the speed of the zoom animation (lower is slower)
+  });
+  mapp.addTo(map);
+
+  // Function to adjust blur based on zoom level
+  function adjustBlur() {
+    const zoom = map.getZoom();
+    const blurAmount = Math.pow(zoom - 2.6, 1.5); // Increase the blur amount based on zoom level
+    document.getElementById('blur-filter').children[0].setAttribute('stdDeviation', blurAmount);
+  }
+
+  // Adjust the blur when the zoom level changes
+  map.on('zoomend', adjustBlur);
+
+  // Initialize blur based on the starting zoom level
+  adjustBlur();
+  L.glify.markers({
+    map: map,
+    data: [{ lat: 25, lon: 10 }], // Example marker coordinates
+    click: function (e, point) {
+      alert(`Clicked marker at ${point.lat}, ${point.lon}`);
+    },
+    size: 15, // Marker size
+    color: 'red' // Marker color
+  });
+
+</script>
