@@ -9,10 +9,7 @@
     <title>Leaflet Tutorial</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 	<script src="libs/glify-browser.min.js"></script>
-	<script>
-	  // namespace
-	  L.glify;
-	</script>
+
     <style>
         #map{
           float: left;
@@ -160,7 +157,10 @@
 
   L.glify.points({
   map: map,
-  data: 'libs/data/antarctica.geojson',
+  data: [
+          {lat: 51.505, lon: -0.09}, 
+          {lat: 51.51, lon: -0.1}, 
+      ],
   click: function(e, point, xy) {
     point.bindPopup();
   }
