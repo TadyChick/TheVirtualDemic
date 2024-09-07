@@ -8,7 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaflet Tutorial</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-
+	<script src="dist/glify-browser.js"></script>
+	<script>
+	  // namespace
+	  L.glify;
+	</script>
     <style>
         #map{
           float: left;
@@ -153,5 +157,14 @@
     size: 15, // Marker size
     color: 'red' // Marker color
   });
+
+  var points = [50, 50]
+  L.glify.points({
+  map: map,
+  data: points,
+  click: function(e, point, xy) {
+    point.bindPopup();
+  }
+});
 
 </script>
