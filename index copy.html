@@ -1,108 +1,169 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <meta charset="utf-8" />
-    <title>Leaflet.GLMarkers Playground</title>
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-        crossorigin=""
-    />
-    <script
-        src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-        crossorigin=""
-    ></script>
-    <script src="https://unpkg.com/leaflet.glmarkers@latest/dist/Leaflet.GLMarkers.js"></script>
-</head>
-<body>
-    <div id="map" style="width: 100%; height: 100vh;"></div>
-    <script>
-        var map = L.map("map").setView([0, 0], 2);
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Tutorial</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+	<script src="libs/glify-browser.min.js"></script>
 
-        var glMarkers;
-
-        // Simple shaders for applying texture to square markers
-        var vertexShaderCode = `
-            attribute vec2 aCRSCoords;
-            attribute vec2 aExtrudeCoords;
-            uniform mat4 uTransformMatrix;
-            uniform vec2 uPixelSize;
-            
-            varying vec2 vExtrudeCoords;
-
-            void main(void) {
-                vExtrudeCoords = aExtrudeCoords;
-                gl_Position = uTransformMatrix * vec4(aCRSCoords, 1.0, 1.0);
-                gl_Position += vec4(aExtrudeCoords * uPixelSize * 10.0, 0.0, 0.0); // Adjust size by changing the scaling factor
-            }
-        `;
-
-        var fragmentShaderCode = `
-            precision highp float;
-            uniform sampler2D uTexture0; // Texture sampler for the custom image
-            varying vec2 vExtrudeCoords;
-            
-            void main(void) {
-                vec2 texelCoords = (vExtrudeCoords + 1.0) / 2.0; // Convert to [0,1] range
-                gl_FragColor = texture2D(uTexture0, texelCoords); // Apply texture to the square markers
-            }
-        `;
-
-        function initializeMarkers() {
-            if (glMarkers) {
-                glMarkers.remove();
-            }
-
-            glMarkers = new L.GLMarkerGroup({
-				attributes: [
-						"megacity",
-						"rank_min",
-						"rank_max",
-						"labelrank",
-						"adm0cap",
-						"pop_max",
-						"pop_min",
-					],
-                vertexShader: vertexShaderCode,
-                fragmentShader: fragmentShaderCode,
-                textures: ['InfectionMarker.png'],
-            });
-
-            glMarkers.addTo(map);
+    <style>
+        #map{
+          float: left;
+          margin-left: 4px;
+            height: 98vh;
+            width: 80%;
         }
 
-        // Load and add GeoJSON data
-        fetch("https://common-data.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20ne_10m_populated_places_simple&format=GeoJSON")
-            .then(response => response.json())
-            .then(json => {
-                if (glMarkers) {
-                    json.features.forEach(function (feature) {
-                        if (feature.geometry.type === "Point") {
-                            glMarkers.addMarker(
-                                new L.GLMarker(
-                                    [feature.geometry.coordinates[1], feature.geometry.coordinates[0]],
-                                    feature.properties, 
-                                )
-                            );
-                        }
-                    });
-                }
-            });
+                /* Define the SVG filter for blurring */
+                .blurred-polygon {
+            filter: url(#blur-filter);
+        }
+    </style>
+</head>
+<body>
+  
+    <div id="map"></div>
 
-        // Initialize the map with the markers
-        initializeMarkers();
-
-        // Base tile layer for the map
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-            maxZoom: 16,
-            noWrap: true,
-            zoomAnimation: true,
-            zoomAnimationThreshold: 5,
-            easeLinearity: 0.25
-        }).addTo(map);
-    </script>
+    <!-- Define the SVG filter for blurring -->
+    <svg width="0" height="0">
+        <defs>
+            <filter id="blur-filter" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="10" />
+            </filter>
+        </defs>
+    </svg>
+    </style>
 </body>
 </html>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="dist/Leaflet.glify.min.js"></script>
+<script>
+    
+  var infectionIcon = L.icon({
+    iconUrl: 'https://github.com/TadyChick/TheVirtualDemic/blob/main/InfectionMarker.png',
+    iconSize: [10, 10], // size of the icosn
+    iconAnchor: [5, 5], // point of the icon which will correspond to marker's location
+    popupAnchor: [0, -5] // point from which the popup should open relative to the iconAnchor
+  });
+
+  var map = L.map('map', {
+			worldCopyJump: false,
+			maxBounds: [[-60, -180], [81, 180]],
+			maxBoundsViscosity: 1.0,
+			minZoom: 2.6,
+			zoomSnap: 0.25,
+		}).setView([25, 10], 2.6);
+
+  // Create a new pane for the blurred polygons
+  map.createPane('blurredPane');
+  map.getPane('blurredPane').style.zIndex = 400;
+
+  let infectionData = {};
+
+  fetch('https://raw.githubusercontent.com/TadyChick/TheVirtualDemic/main/Infections.txt')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.text();
+    })
+    .then(text => {
+      // Parse the text data and create a map of country names to infection counts
+      text.split('\n').forEach(line => {
+        let [country, count] = line.split(',');
+        if (country && count) {
+          infectionData[country.trim()] = parseInt(count.trim(), 10) || 0; // Convert to number or default to 0
+        }
+      });
+      loadGeoJsonLayer();
+    })
+    .catch(error => console.error('Error loading infection data:', error));
+
+  function loadGeoJsonLayer() {
+    fetch('https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master/10m/cultural/ne_10m_admin_0_countries.json')
+      .then(response => response.json())
+      .then(data => {
+        L.geoJSON(data, {
+          pane: 'blurredPane', // Use the custom pane
+          style: feature => {
+            // Get the country's infection count from the parsed data
+            const infectionCount = infectionData[feature.properties.NAME] || 0;
+            let fillColor = '#bd0b0b';
+            let fillOpacity;
+
+            if (infectionCount >= 3) {
+              fillOpacity = 0.2;
+            } else if (infectionCount > 0) {
+              fillOpacity = 0.05;
+            } else {
+              fillColor = 'transparent'; // Transparent for 0 infections or not meeting criteria
+              fillOpacity = 0;
+            }
+
+            return {
+              className: 'blurred-polygon',
+              color: 'none', // No border
+              weight: 1, // Border weight
+              fillColor: fillColor,
+              fillOpacity: fillOpacity // Opacity only if infections exist
+            };
+          },
+          onEachFeature: (feature, layer) => {
+            const infectionCount = infectionData[feature.properties.NAME] || 0;
+            if (infectionCount > 0) {
+              layer.bindPopup(`<b>${feature.properties.NAME}</b><br><h>Infections: ${infectionCount}</h>`);
+            }
+          }
+        }).addTo(map);
+      })
+      .catch(error => console.error('Error loading GeoJSON:', error));
+  }
+
+  var mapp = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+    maxZoom: 16,
+    noWrap: true, // Prevent the map from repeating horizontally
+    zoomAnimation: true, // Enables smooth zoom animation
+    zoomAnimationThreshold: 5, // Sets a threshold for smooth zooming
+    easeLinearity: 0.25 // Controls the speed of the zoom animation (lower is slower)
+  });
+  mapp.addTo(map);
+
+  // Function to adjust blur based on zoom level
+  function adjustBlur() {
+    const zoom = map.getZoom();
+    const blurAmount = Math.pow(zoom - 2.6, 1.5); // Increase the blur amount based on zoom level
+    document.getElementById('blur-filter').children[0].setAttribute('stdDeviation', blurAmount);
+  }
+
+  // Adjust the blur when the zoom level changes
+  map.on('zoomend', adjustBlur);
+
+  // Initialize blur based on the starting zoom level
+  adjustBlur();
+  L.glify.markers({
+    map: map,
+    data: [{ lat: 25, lon: 10 }], // Example marker coordinates
+    click: function (e, point) {
+      alert(`Clicked marker at ${point.lat}, ${point.lon}`);
+    },
+    size: 15, // Marker size
+    color: 'red' // Marker color
+  });
+
+  L.glify.points({
+  map: map,
+  data: [
+          {lat: 51.505, lon: -0.09}, 
+          {lat: 51.51, lon: -0.1}, 
+      ],
+  click: function(e, point, xy) {
+    point.bindPopup();
+  }
+});
+
+</script>
