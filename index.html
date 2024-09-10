@@ -35,7 +35,7 @@
             void main(void) {
                 vExtrudeCoords = aExtrudeCoords;
                 gl_Position = uTransformMatrix * vec4(aCRSCoords, 1.0, 1.0);
-                gl_Position += vec4(aExtrudeCoords * uPixelSize * 10.0, 0.0, 0.0); // Adjust size by changing the scaling factor
+                gl_Position += vec4(aExtrudeCoords * uPixelSize * 2.0, 0.0, 0.0); // Adjust size by changing the scaling factor
             }
         `;
 
@@ -67,7 +67,7 @@
 					],
                 vertexShader: vertexShaderCode,
                 fragmentShader: fragmentShaderCode,
-                textures: ['InfectionMarker3.png'],
+                textures: ['InfectionMarker.png'],
             });
 
             glMarkers.addTo(map);
