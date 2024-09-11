@@ -1,72 +1,75 @@
-
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta charset="utf-8" />
-		<link
-			rel="stylesheet"
-			href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-			integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
-			crossorigin=""
-		/>
-		<script type="importmap">
-			{
-				"imports": {
-					"leaflet": "https://unpkg.com/leaflet@1.9.3/dist/leaflet-src.esm.js",
-					"gleo/": "https://unpkg.com/gleo@0.8.0/src/",
-					"leaflet-gleo": "https://github.com/TadyChick/TheVirtualDemic/blob/main/LeafletGleo.js"
-				}
-			}
-		</script>
-	</head>
-	<body style="margin: 0">
-		<div id="leaflet-map" style="width: 100vw; height: 50vh"></div>
-		<script type="module">
-			import { Map, TileLayer } from "leaflet";
+<head>
+    <meta charset="utf-8" />
+    <title>Leaflet.GLMarkers Playground</title>
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""
+    />
+    <script
+        src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""
+    ></script>
+</head>
+<body>
+    <div id="map" style="width: 100%; height: 100vh;"></div>
+    <script>
+        var map = L.map("map");
+        L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png").addTo(map);
 
-			import HeatPoint from "gleo/symbols/HeatPoint.mjs";
-			// import CircleFill from "gleo/symbols/CircleFill.mjs";
-			import AcetateHeatMap from "gleo/acetates/AcetateHeatMap.mjs";
-			import LatLng from "gleo/geometry/LatLng.mjs";
+        map.setView([60.28, 24.97], 8);
 
-			import LeafletGleo from "leaflet-gleo";
+        var myRenderer = L.canvas({ padding: 0.5 });
 
-			const map = new Map("leaflet-map");
+        for (var i = 0; i < 10000; i += 1) { // 10k points
+            L.circleMarker(randomGeo({latitude: 63.64, longitude: 24.97}, 111300), {
+            renderer: myRenderer,
+            radius: 3,
+            color: getRandomColor()
+        }).addTo(map).bindPopup('marker ' + i);
+        }
 
-			map.setView([0, 0], 1);
 
-			// Tile layer directly to Leaflet
-			const tiles = new TileLayer("https://tile.osm.org/{z}/{x}/{y}.png", {
-				attribution:
-					"<a href='http://osm.org/copyright'>© OpenStreetMap contributors</a>",
-			}).addTo(map);
+        //Create random lat/long coordinates in a specified radius around a center point
+        function randomGeo(center, radius) {
+            var y0 = center.latitude;
+            var x0 = center.longitude;
+            var rd = radius / 19000; //about 111300 meters in one degree
 
-			// Leaflet-Gleo bridging
-			const platina = new LeafletGleo(map, {
-				/* platina options */
-			});
+            var u = Math.random();
+            var v = Math.random();
 
-			// Gleo specific stuff
-			const heatmap = new AcetateHeatMap(platina, {
-				queryable: true,
-				stops: {
-					0: [255, 0, 0, 0],
-					10: [255, 0, 0, 255],
-					100: [255, 255, 0, 255],
-					200: [0, 255, 0, 255],
-					500: [0, 255, 255, 255],
-				},
-				zIndex: 3000,
-			});
+            var w = rd * Math.sqrt(u);
+            var t = 2 * Math.PI * v;
+            var x = w * Math.cos(t);
+            var y = w * Math.sin(t);
 
-			new HeatPoint(new LatLng([0, 0]), { intensity: 100, radius: 100 }).addTo(
-				heatmap
-			);
-			new HeatPoint(new LatLng([40, -3]), { intensity: 100, radius: 100 }).addTo(
-				heatmap
-			);
-			// new CircleFill(new LatLng([0,0]), {colour: 'red', radius: 100}).addTo(heatmap);
-		</script>
-	</body>
+            //Adjust the x-coordinate for the shrinking of the east-west distances
+            var xp = x / Math.cos(y0);
+
+            var newlat = y + y0;
+            var newlon = x + x0;
+            var newlon2 = xp + x0;
+
+            return [
+                newlat.toFixed(5),
+                newlon.toFixed(5)
+
+            ];
+        }
+
+        function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+        }
+    </script>
+</body>
 </html>
