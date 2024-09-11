@@ -1,0 +1,28 @@
+{
+	"name": "leaflet.gleo",
+	"version": "0.2.0",
+	"description": "A Leaflet plugin to render data through Gleo",
+	"browser": "LeafletGleo.js",
+	"repository": {
+		"type": "git",
+		"url": "git+https://gitlab.com/IvanSanchez/leaflet.gleo.git"
+	},
+	"keywords": [
+		"gis",
+		"map",
+		"webgl"
+	],
+	"author": "Iván Sánchez Ortega <ivan@sanchezortega.es>",
+	"license": "GPL-3.0",
+	"bugs": {
+		"url": "https://gitlab.com/IvanSanchez/leaflet.gleo/issues"
+	},
+	"prettier": {
+		"printWidth": 90,
+		"tabWidth": 4,
+		"useTabs": true,
+		"trailingComma": "es5",
+		"arrowParens": "always"
+	},
+	"homepage": "https://gitlab.com/IvanSanchez/leaflet.gleo#readme"
+}
