@@ -1,108 +1,71 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8" />
-    <title>Leaflet.GLMarkers Playground</title>
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-        crossorigin=""
-    />
-    <script
-        src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-        crossorigin=""
-    ></script>
-    <script src="https://unpkg.com/leaflet.glmarkers@latest/dist/Leaflet.GLMarkers.js"></script>
-</head>
-<body>
-    <div id="map" style="width: 100%; height: 100vh;"></div>
-    <script>
-        var map = L.map("map").setView([0, 0], 2);
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta charset="utf-8" />
+		<link
+			rel="stylesheet"
+			href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+			integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+			crossorigin=""
+		/>
+		<script type="importmap">
+			{
+				"imports": {
+					"leaflet": "https://unpkg.com/leaflet@1.9.3/dist/leaflet-src.esm.js",
+					"gleo/": "https://unpkg.com/gleo@0.8.0/src/",
+					"leaflet-gleo": "LeafletGleo.js"
+				}
+			}
+		</script>
+	</head>
+	<body style="margin: 0">
+		<div id="leaflet-map" style="width: 100vw; height: 50vh"></div>
+		<script type="module">
+			import { Map, TileLayer } from "leaflet";
 
-        var glMarkers;
+			import HeatPoint from "gleo/symbols/HeatPoint.mjs";
+			// import CircleFill from "gleo/symbols/CircleFill.mjs";
+			import AcetateHeatMap from "gleo/acetates/AcetateHeatMap.mjs";
+			import LatLng from "gleo/geometry/LatLng.mjs";
 
-        // Simple shaders for applying texture to square markers
-        var vertexShaderCode = `
-            attribute vec2 aCRSCoords;
-            attribute vec2 aExtrudeCoords;
-            uniform mat4 uTransformMatrix;
-            uniform vec2 uPixelSize;
-            
-            varying vec2 vExtrudeCoords;
+			import LeafletGleo from "leaflet-gleo";
 
-            void main(void) {
-                vExtrudeCoords = aExtrudeCoords;
-                gl_Position = uTransformMatrix * vec4(aCRSCoords, 1.0, 1.0);
-                gl_Position += vec4(aExtrudeCoords * uPixelSize * 2.0, 0.0, 0.0); // Adjust size by changing the scaling factor
-            }
-        `;
+			const map = new Map("leaflet-map");
 
-        var fragmentShaderCode = `
-            precision highp float;
-            uniform sampler2D uTexture0; // Texture sampler for the custom image
-            varying vec2 vExtrudeCoords;
-            
-            void main(void) {
-                vec2 texelCoords = (vExtrudeCoords + 1.0) / 2.0; // Convert to [0,1] range
-                gl_FragColor = texture2D(uTexture0, texelCoords); // Apply texture to the square markers
-            }
-        `;
+			map.setView([0, 0], 1);
 
-        function initializeMarkers() {
-            if (glMarkers) {
-                glMarkers.remove();
-            }
+			// Tile layer directly to Leaflet
+			const tiles = new TileLayer("https://tile.osm.org/{z}/{x}/{y}.png", {
+				attribution:
+					"<a href='http://osm.org/copyright'>© OpenStreetMap contributors</a>",
+			}).addTo(map);
 
-            glMarkers = new L.GLMarkerGroup({
-				attributes: [
-						"megacity",
-						"rank_min",
-						"rank_max",
-						"labelrank",
-						"adm0cap",
-						"pop_max",
-						"pop_min",
-					],
-                vertexShader: vertexShaderCode,
-                fragmentShader: fragmentShaderCode,
-                textures: ['InfectionMarker.png'],
-            });
+			// Leaflet-Gleo bridging
+			const platina = new LeafletGleo(map, {
+				/* platina options */
+			});
 
-            glMarkers.addTo(map);
-        }
+			// Gleo specific stuff
+			const heatmap = new AcetateHeatMap(platina, {
+				queryable: true,
+				stops: {
+					0: [255, 0, 0, 0],
+					10: [255, 0, 0, 255],
+					100: [255, 255, 0, 255],
+					200: [0, 255, 0, 255],
+					500: [0, 255, 255, 255],
+				},
+				zIndex: 3000,
+			});
 
-        // Load and add GeoJSON data
-        fetch("https://common-data.carto.com/api/v2/sql?q=SELECT%20*%20FROM%20ne_10m_populated_places_simple&format=GeoJSON")
-            .then(response => response.json())
-            .then(json => {
-                if (glMarkers) {
-                    json.features.forEach(function (feature) {
-                        if (feature.geometry.type === "Point") {
-                            glMarkers.addMarker(
-                                new L.GLMarker(
-                                    [feature.geometry.coordinates[1], feature.geometry.coordinates[0]],
-                                    feature.properties, 
-                                )
-                            );
-                        }
-                    });
-                }
-            });
-
-        // Initialize the map with the markers
-        initializeMarkers();
-
-        // Base tile layer for the map
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-            maxZoom: 16,
-            noWrap: true,
-            zoomAnimation: true,
-            zoomAnimationThreshold: 5,
-            easeLinearity: 0.25
-        }).addTo(map);
-    </script>
-</body>
+			new HeatPoint(new LatLng([0, 0]), { intensity: 100, radius: 100 }).addTo(
+				heatmap
+			);
+			new HeatPoint(new LatLng([40, -3]), { intensity: 100, radius: 100 }).addTo(
+				heatmap
+			);
+			// new CircleFill(new LatLng([0,0]), {colour: 'red', radius: 100}).addTo(heatmap);
+		</script>
+	</body>
 </html>
